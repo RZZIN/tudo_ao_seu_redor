@@ -1,0 +1,883 @@
+ <!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tudo ao Seu Redor — Informação Hiperlocal e Negócios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --night:    #0D1B2A;
+      --green:    #1A6B4A;
+      --green-lt: #22895F;
+      --yellow:   #F5C842;
+      --white:    #FFFFFF;
+      --red:      #E84A3B;
+      --blue:     #3B8FD9;
+      --muted:    #9AABC0;
+      --card-bg:  rgba(255, 255, 255, 0.03);
+      --border:   rgba(255, 255, 255, 0.1);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--night);
+      color: var(--white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /*tela de login*/
+    #auth-overlay {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100vh;
+      background: var(--night);
+      z-index: 99999;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      overflow-y: auto;
+      transition: opacity 0.4s ease, visibility 0.4s;
+    }
+    .auth-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      padding: 40px;
+      border-radius: 24px;
+      width: 100%;
+      max-width: 460px;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+      margin: auto;
+    }
+    .auth-brand {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 800;
+      color: var(--white);
+      margin-bottom: 16px;
+      letter-spacing: -0.5px;
+      word-break: break-word;
+    }
+    .auth-brand span { color: var(--yellow); }
+    .auth-card h2 { font-family: 'Syne', sans-serif; font-size: 1.6rem; margin-bottom: 8px; }
+    .auth-card p { color: var(--muted); font-size: 0.95rem; margin-bottom: 24px; }
+    
+    /* feeedback */
+    .auth-feedback-msg {
+      background: rgba(232, 74, 59, 0.1);
+      border: 1px solid rgba(232, 74, 59, 0.2);
+      color: #FF6B5B;
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: none;
+      text-align: left;
+    }
+
+    .input-group { text-align: left; margin-bottom: 20px; }
+    .input-group.register-only { display: none; }
+    .input-group label { display: block; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; color: #FFF; }
+    .input-group input {
+      width: 100%; padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      border-radius: 12px; color: var(--white);
+      outline: none; font-size: 0.95rem;
+      transition: border-color 0.2s;
+    }
+    .input-group input:focus { border-color: var(--yellow); }
+    .input-error { border-color: var(--red) !important; background: rgba(232, 74, 59, 0.05) !important; }
+    
+    .auth-submit {
+      width: 100%; padding: 16px; background: var(--yellow); color: var(--night);
+      border: none; border-radius: 12px; font-weight: 700; font-size: 1rem;
+      cursor: pointer; margin-top: 10px; transition: opacity 0.2s;
+    }
+    .auth-submit:hover { opacity: 0.95; }
+    .auth-toggle-link { display: block; margin-top: 24px; color: var(--muted); text-decoration: none; font-size: 0.85rem; }
+    .auth-toggle-link span { color: var(--yellow); font-weight: 700; }
+
+    /*transicao portal*/
+    #main-content {
+      display: none;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+    }
+
+    /* navbar */
+    nav {
+      position: fixed;
+      top: 0; left: 0; width: 100%;
+      padding: 24px 5%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(13, 27, 42, 0.85);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border);
+      z-index: 1000;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.6rem; font-weight: 800; }
+    .logo span { color: var(--yellow); }
+    .nav-links { display: flex; gap: 35px; list-style: none; align-items: center; }
+    .nav-links a { color: var(--white); text-decoration: none; font-size: 0.95rem; font-weight: 600; transition: color 0.2s; }
+    .nav-links a:hover { color: var(--yellow); }
+    .nav-cta {
+      background: var(--yellow); color: var(--night);
+      padding: 12px 24px; border-radius: 10px;
+      font-weight: 700; border: none; cursor: pointer; font-size: 0.9rem;
+    }
+
+    /* grid */
+    .dashboard-container {
+      max-width: 1300px;
+      margin: 140px auto 60px;
+      padding: 0 40px;
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 40px;
+    }
+
+    /* filtros */
+    .filter-bar {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      padding: 24px;
+      border-radius: 16px;
+      margin-bottom: 24px;
+    }
+    .filter-title { font-family: 'Syne', sans-serif; font-size: 1.1rem; margin-bottom: 14px; font-weight: 700; color: var(--yellow); }
+    .filter-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+    .filter-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--white);
+      padding: 12px 20px;
+      border-radius: 30px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: all 0.2s ease;
+    }
+    .filter-chip:hover, .filter-chip.active {
+      background: var(--yellow);
+      color: var(--night);
+      border-color: var(--yellow);
+    }
+
+    /* publicacoes/cards */
+    .feed-section h2 { font-family: 'Syne', sans-serif; font-size: 2.2rem; margin-bottom: 24px; letter-spacing: -0.5px; }
+    .feed-container { display: flex; flex-direction: column; gap: 20px; }
+    .feed-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 18px;
+      padding: 30px;
+      transition: transform 0.2s, border-color 0.2s;
+    }
+    .feed-card:hover { border-color: rgba(255, 255, 255, 0.3); }
+    .feed-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+    .feed-tag {
+      padding: 6px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; min-width: 0; word-break: break-word; flex-shrink: 1;
+    }
+    .tag-alerta { background: rgba(232, 74, 59, 0.2); color: #FF8477; border: 1px solid rgba(232, 74, 59, 0.3); }
+    .tag-evento { background: rgba(34, 137, 95, 0.2); color: #5FF3B9; border: 1px solid rgba(34, 137, 95, 0.3); }
+    .tag-lost { background: rgba(245, 200, 66, 0.2); color: var(--yellow); border: 1px solid rgba(245, 200, 66, 0.3); }
+    .tag-comercio { background: rgba(255, 255, 255, 0.1); color: #FFF; border: 1px solid rgba(255,255,255,0.3); }
+    .tag-emprego { background: rgba(59, 143, 217, 0.2); color: #74C2FF; border: 1px solid rgba(59, 143, 217, 0.3); }
+    
+    .feed-card h3 { font-size: 1.5rem; font-weight: 700; color: var(--white); margin-bottom: 10px; font-family: 'Syne', sans-serif; }
+    .feed-card p { color: #E2E8F0; font-size: 1.05rem; margin-bottom: 18px; line-height: 1.6; }
+    .feed-meta { font-size: 0.9rem; color: var(--muted); font-weight: 500; }
+
+    /* card fixo */
+    .sidebar-section { display: flex; flex-direction: column; gap: 24px; }
+    .sticky-box { position: sticky; top: 120px; display: flex; flex-direction: column; gap: 24px; }
+    
+    .ad-panel {
+      background: linear-gradient(135deg, rgba(245,200,66,0.06) 0%, rgba(13,27,42,1) 100%);
+      border: 1px solid rgba(245, 200, 66, 0.4);
+      padding: 32px; border-radius: 20px;
+    }
+    .ad-panel h3 { font-family: 'Syne', sans-serif; font-size: 1.4rem; margin-bottom: 10px; color: var(--yellow); }
+    .ad-panel p { color: #E2E8F0; font-size: 1rem; margin-bottom: 24px; }
+    .btn-announce {
+      width: 100%; background: var(--yellow); color: var(--night);
+      padding: 16px; border-radius: 12px; font-weight: 700; text-align: center;
+      text-decoration: none; display: block; border: none; cursor: pointer; font-size: 0.95rem;
+    }
+
+    /* planos anuncios */
+    .pricing-section { max-width: 1200px; margin: 100px auto 60px; padding: 0 40px; border-top: 1px solid var(--border); padding-top: 80px; }
+    .pricing-header { text-align: center; margin-bottom: 60px; }
+    .pricing-header h2 { font-family: 'Syne', sans-serif; font-size: 2.6rem; margin-bottom: 12px; }
+    .pricing-header p { color: var(--muted); font-size: 1.15rem; }
+    
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 30px; }
+    .price-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 40px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative;
+    }
+    .price-card.featured { border-color: var(--yellow); background: rgba(245, 200, 66, 0.02); }
+    .badge-featured {
+      position: absolute; top: -14px; right: 24px; background: var(--yellow);
+      color: var(--night); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700;
+    }
+    .price-name { font-family: 'Syne', sans-serif; font-size: 1.3rem; margin-bottom: 8px; font-weight: 700; }
+    .price-value { font-family: 'Syne', sans-serif; font-size: 2.4rem; font-weight: 800; color: var(--yellow); margin-bottom: 20px; }
+    .price-value span { font-size: 1rem; color: var(--muted); font-weight: 400; }
+    .price-features { list-style: none; margin-bottom: 35px; }
+    .price-features li { font-size: 1rem; color: #E2E8F0; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+    .price-features li::before { content: "✓"; color: var(--yellow); font-weight: 700; }
+
+    footer { padding: 40px; border-top: 1px solid var(--border); text-align: center; margin-top: 80px; }
+    footer p { color: var(--muted); font-size: 0.9rem; }
+
+    @media (max-width: 1024px) {
+      .dashboard-container { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+
+    /* celu */
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 4px;
+      background: none;
+      border: none;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--white);
+      border-radius: 2px;
+      transition: all 0.3s ease;
+    }
+    .hamburger.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburger.open span:nth-child(2) { opacity: 0; }
+    .hamburger.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    @media (max-width: 768px) {
+      /* portal */
+      .auth-card { padding: 28px 20px; }
+      .auth-brand { font-size: 1.4rem; }
+      .auth-card h2 { font-size: 1.3rem; }
+
+      /* navbar */
+      nav { padding: 16px 5%; position: relative; flex-wrap: wrap; }
+      .hamburger { display: flex; }
+      .nav-links {
+        display: none;
+        flex-direction: column;
+        gap: 0;
+        width: 100%;
+        background: rgba(13, 27, 42, 0.98);
+        border-top: 1px solid var(--border);
+        margin-top: 12px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .nav-links.open { display: flex; }
+      .nav-links li { width: 100%; }
+      .nav-links a {
+        display: block;
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
+        font-size: 1rem;
+      }
+      .nav-links li:last-child a,
+      .nav-links li:last-child { border-bottom: none; }
+      .nav-cta {
+        width: 100%;
+        padding: 14px 20px;
+        border-radius: 0;
+        text-align: left;
+        font-size: 1rem;
+        background: rgba(245,200,66,0.1);
+        color: var(--yellow);
+      }
+
+      /* dashboard */
+      .dashboard-container {
+        margin: 100px auto 40px;
+        padding: 0 16px;
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
+
+      /* publicacoes */
+      .feed-section h2 { font-size: 1.6rem; }
+      .feed-card { padding: 20px 16px; }
+      .feed-card h3 { font-size: 1.2rem; }
+      .feed-card p { font-size: 0.95rem; }
+      .filter-bar { padding: 16px; }
+      .filter-chip { padding: 10px 14px; font-size: 0.82rem; }
+
+      /* planos */
+      .pricing-section { padding: 0 16px; padding-top: 60px; margin-top: 60px; }
+      .pricing-header h2 { font-size: 1.8rem; }
+      .pricing-grid { grid-template-columns: 1fr; gap: 20px; }
+      .price-card { padding: 28px 20px; }
+
+      /* footer */
+      footer { padding: 24px 16px; margin-top: 40px; }
+    }
+
+    @media (max-width: 400px) {
+      .auth-brand { font-size: 1.2rem; }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="auth-overlay">
+    <div class="auth-card">
+      <div class="auth-brand">tudo<span>aoseuredor</span></div>
+      <h2 id="auth-title">Entrar na Plataforma</h2>
+      <p id="auth-subtitle">Acesse para interagir e filtrar o conteúdo comercial.</p>
+      
+      <div id="auth-error-msg" class="auth-feedback-msg"></div>
+      
+      <div class="input-group register-only" id="group-name">
+        <label for="auth-name">Nome Completo</label>
+        <input type="text" id="auth-name" placeholder="Digite seu nome completo">
+      </div>
+
+      <div class="input-group register-only" id="group-address">
+        <label for="auth-address">Endereço Residencial ou Comercial</label>
+        <input type="text" id="auth-address" placeholder="Rua, Número, Bairro, Cidade">
+      </div>
+
+      <div class="input-group">
+        <label for="auth-email">E-mail</label>
+        <input type="email" id="auth-email" placeholder="seu-email@provedor.com">
+      </div>
+      
+      <div class="input-group">
+        <label for="auth-password">Senha (6 a 20 caracteres)</label>
+        <input type="password" id="auth-password" placeholder="Sua senha">
+      </div>
+      
+      <button id="auth-btn" class="auth-submit">Acessar Conta</button>
+      
+      <a href="#" id="toggle-auth" class="auth-toggle-link">
+        Não possui cadastro? <span>Cadastre-se aqui</span>
+      </a>
+    </div>
+  </div>
+
+
+  <div id="main-content">
+
+    <nav>
+      <div class="logo">tudo<span>aoseuredor</span></div>
+      <button class="hamburger" id="hamburger" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <ul class="nav-links" id="nav-links">
+        <li><a href="#feed">Timeline Local</a></li>
+        <li><a href="#anuncios">Planos Comerciais</a></li>
+        <li><button class="nav-cta" onclick="document.getElementById('anuncios').scrollIntoView({behavior: 'smooth'})">Anunciar Marca (Pago)</button></li>
+      </ul>
+    </nav>
+
+    <div class="dashboard-container" id="feed">
+      
+      <div class="feed-section">
+        <h2>Acontecendo na Região</h2>
+
+        <div class="filter-bar">
+          <div class="filter-title">Escolha o conteúdo que deseja exibir:</div>
+          <div class="filter-chips">
+            <div class="filter-chip active" data-filter="all">📱 Mostrar Tudo</div>
+            <div class="filter-chip" data-filter="comercio">🛍️ Patrocinados & Empresas</div>
+            <div class="filter-chip" data-filter="alerta">🚨 Alertas Críticos</div>
+            <div class="filter-chip" data-filter="evento">🎉 Eventos Culturais</div>
+            <div class="filter-chip" data-filter="emprego">💼 Vagas de Emprego</div>
+            <div class="filter-chip" data-filter="lost">🐾 Achados e Perdidos</div>
+          </div>
+        </div>
+
+        <div class="feed-container">
+
+          <div class="feed-card" data-category="comercio" style="border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.02);">
+            <div class="feed-header">
+              <span class="feed-tag tag-comercio" style="color: var(--yellow); font-weight:800;">⭐ ANÚNCIO DESTAQUE (PAGO)</span>
+              <span class="feed-meta">Patrocinado</span>
+            </div>
+            <h3>Inauguração Café Central Gourmet</h3>
+            <p>Venha saborear cafés especiais e doces artesanais. Desconto ativo de 15% para os primeiros clientes da semana!</p>
+            <div class="feed-meta">Anúncio Comercial Verificado · Centro</div>
+          </div>
+
+          <div class="feed-card" data-category="comercio" style="border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.02);">
+            <div class="feed-header">
+              <span class="feed-tag tag-comercio" style="color: var(--yellow); font-weight:800;">⭐ ANÚNCIO DESTAQUE (PAGO)</span>
+              <span class="feed-meta">Patrocinado</span>
+            </div>
+            <h3>Academia Vitality: Plano Trimestral com 20% de Desconto</h3>
+            <p>Matricule-se este mês e garanta musculação, aulas coletivas e avaliação física gratuita. Vagas limitadas na unidade.</p>
+            <div class="feed-meta">Anúncio Comercial Verificado · Zona 07</div>
+          </div>
+
+          <div class="feed-card" data-category="comercio" style="border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.02);">
+            <div class="feed-header">
+              <span class="feed-tag tag-comercio" style="color: var(--yellow); font-weight:800;">⭐ ANÚNCIO DESTAQUE (PAGO)</span>
+              <span class="feed-meta">Patrocinado</span>
+            </div>
+            <h3>Pet Shop Amigo Fiel Lança Banho e Tosa a Domicílio</h3>
+            <p>Agende pelo aplicativo e ganhe 10% de desconto na primeira visita. Equipe própria e produtos hipoalergênicos.</p>
+            <div class="feed-meta">Anúncio Comercial Verificado · Jd. Alvorada</div>
+          </div>
+
+          <div class="feed-card" data-category="alerta">
+            <div class="feed-header">
+              <span class="feed-tag tag-alerta">🚨 Alerta de Trânsito</span>
+              <span class="feed-meta">Há 2 min</span>
+            </div>
+            <h3>Semáforo Intermitente na Av. Colombo</h3>
+            <p>Trânsito lento e atenção redobrada perto da Zona 07 devido à manutenção técnica de infraestrutura local.</p>
+            <div class="feed-meta">Região: Zona 07 · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="alerta">
+            <div class="feed-header">
+              <span class="feed-tag tag-alerta">🌩️ Alerta Climático</span>
+              <span class="feed-meta">Há 30 min</span>
+            </div>
+            <h3>Simepar Aponta Risco de Temporal com Granizo no Fim da Tarde</h3>
+            <p>Recomenda-se proteger veículos e evitar áreas abertas entre 17h e 20h. Ventos fortes também são esperados para a região.</p>
+            <div class="feed-meta">Região: Toda a cidade · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="alerta">
+            <div class="feed-header">
+              <span class="feed-tag tag-alerta">🚧 Alerta de Manutenção</span>
+              <span class="feed-meta">Há 3 horas</span>
+            </div>
+            <h3>Sanepar Interrompe Abastecimento de Água na Zona 05 Hoje</h3>
+            <p>Manutenção programada na rede pode deixar a região sem água entre 9h e 16h. Recomenda-se reservar água com antecedência.</p>
+            <div class="feed-meta">Região: Zona 05 · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="evento">
+            <div class="feed-header">
+              <span class="feed-tag tag-evento">🎉 Evento Local</span>
+              <span class="feed-meta">Há 15 min</span>
+            </div>
+            <h3>Feira de Orgânicos na Praça Raposo Tavares</h3>
+            <p>Hortifrúti direto do produtor. Alimentos sem agrotóxicos e artesanato local aberto à comunidade até as 13h.</p>
+            <div class="feed-meta">Região: Centro · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="evento">
+            <div class="feed-header">
+              <span class="feed-tag tag-evento">🎶 Show Gratuito</span>
+              <span class="feed-meta">Há 1 dia</span>
+            </div>
+            <h3>MPB ao Vivo no Parque do Ingá Neste Sábado</h3>
+            <p>Apresentação gratuita a partir das 18h, com food trucks na área externa. Leve uma cadeira ou manta para curtir.</p>
+            <div class="feed-meta">Região: Parque do Ingá · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="evento">
+            <div class="feed-header">
+              <span class="feed-tag tag-evento">🎬 Cinema ao Ar Livre</span>
+              <span class="feed-meta">Há 2 horas</span>
+            </div>
+            <h3>Sessão de Cinema ao Ar Livre na Praça da Catedral</h3>
+            <p>Exibição gratuita às 19h30, com pipoca à venda no local. Programação para todas as idades, sujeita a condições climáticas.</p>
+            <div class="feed-meta">Região: Centro · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="emprego">
+            <div class="feed-header">
+              <span class="feed-tag tag-emprego">💼 Vaga de Emprego</span>
+              <span class="feed-meta">Há 20 min</span>
+            </div>
+            <h3>Padaria do Bairro Contrata Atendente de Caixa</h3>
+            <p>Vaga para período integral, sem necessidade de experiência prévia. Envie seu currículo pelo WhatsApp informado no perfil.</p>
+            <div class="feed-meta">Região: Jd. Alvorada · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="emprego">
+            <div class="feed-header">
+              <span class="feed-tag tag-emprego">💼 Vaga de Emprego</span>
+              <span class="feed-meta">Há 2 horas</span>
+            </div>
+            <h3>Oportunidade para Motorista de Aplicativo com Veículo Próprio</h3>
+            <p>Horários flexíveis e pagamento semanal. Necessário CNH categoria B e veículo em bom estado de conservação.</p>
+            <div class="feed-meta">Região: Toda a cidade · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="emprego">
+            <div class="feed-header">
+              <span class="feed-tag tag-emprego">💼 Vaga de Emprego</span>
+              <span class="feed-meta">Há 5 horas</span>
+            </div>
+            <h3>Clínica Odontológica Busca Recepcionista com Experiência</h3>
+            <p>Necessário domínio de agenda e bom atendimento ao público. Início imediato. Envie currículo para o e-mail da clínica.</p>
+            <div class="feed-meta">Região: Centro · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="lost">
+            <div class="feed-header">
+              <span class="feed-tag tag-lost">🐾 Pet Perdido</span>
+              <span class="feed-meta">Há 1 hora</span>
+            </div>
+            <h3>Vira-lata Caramelo Visto na Av. Mandacaru</h3>
+            <p>Animal de médio porte com coleira vermelha foi visto correndo assustado perto do cruzamento principal.</p>
+            <div class="feed-meta">Região: Jd. Alvorada · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="lost">
+            <div class="feed-header">
+              <span class="feed-tag tag-lost">🔑 Achado</span>
+              <span class="feed-meta">Há 4 horas</span>
+            </div>
+            <h3>Molho de Chaves Encontrado Próximo à Pizzaria da Zona 7</h3>
+            <p>Três chaves e um chaveiro de time de futebol. Descreva o objeto para identificar o dono e combinar a devolução.</p>
+            <div class="feed-meta">Região: Zona 07 · Maringá, PR</div>
+          </div>
+
+          <div class="feed-card" data-category="lost">
+            <div class="feed-header">
+              <span class="feed-tag tag-lost">🐾 Pet Perdido</span>
+              <span class="feed-meta">Há 6 horas</span>
+            </div>
+            <h3>Gata Persa Branca Desaparecida no Jardim Itaipu</h3>
+            <p>Muito arisca com estranhos, pode estar escondida em quintais próximos. Quem encontrar será recompensado.</p>
+            <div class="feed-meta">Região: Jd. Itaipu · Maringá, PR</div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <div class="sticky-box">
+          <div class="ad-panel">
+            <h3>Divulgue sua Marca Local</h3>
+            <p>Para anunciar promoções, vagas ou serviços no feed principal, selecione um dos nossos planos de divulgação empresarial.</p>
+            <button class="btn-announce" onclick="document.getElementById('anuncios').scrollIntoView({behavior: 'smooth'})">Ver Valores Vigentes</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <section class="pricing-section" id="anuncios">
+      <div class="pricing-header">
+        <h2>Planos e Valores de Anúncio</h2>
+        <p>Impulsione seus negócios com entrega direta na localização do seu público-alvo.</p>
+      </div>
+      
+      <div class="pricing-grid">
+        <div class="price-card">
+          <div>
+            <div class="price-name">Anúncio Avulso</div>
+            <div class="price-value">R$ 29<span> / post</span></div>
+            <ul class="price-features">
+              <li>1 Postagem comercial na timeline</li>
+              <li>Filtro ativo por 48 horas de forma direta</li>
+              <li>Suporte padrão via painel</li>
+            </ul>
+          </div>
+          <button class="btn-announce" style="background: transparent; color: #FFF; border: 1px solid var(--border);">Selecionar Plano</button>
+        </div>
+
+        <div class="price-card featured">
+          <div class="badge-featured">Mais Vantajoso</div>
+          <div>
+            <div class="price-name">Destaque Mensal</div>
+            <div class="price-value">R$ 149<span> / mês</span></div>
+            <ul class="price-features">
+              <li>Até 8 postagens no mês com logo</li>
+              <li>Destaque prioritário nos filtros</li>
+              <li>Relatório mensal de cliques</li>
+              <li>Suporte imediato</li>
+            </ul>
+          </div>
+          <button class="btn-announce">Adquirir Destaque</button>
+        </div>
+
+        <div class="price-card">
+          <div>
+            <div class="price-name">Plano Corporativo</div>
+            <div class="price-value">R$ 399<span> / mês</span></div>
+            <ul class="price-features">
+              <li>Postagens comerciais ilimitadas</li>
+              <li>Segmentação total de bairros</li>
+              <li>Acesso API e métricas completas</li>
+              <li>Gerente de contas dedicado</li>
+            </ul>
+          </div>
+          <button class="btn-announce" style="background: transparent; color: #FFF; border: 1px solid var(--border);">Contatar Vendas</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <p>© 2026 Tudo ao Seu Redor S.A. · UniCesumar · Maringá, PR</p>
+    </footer>
+
+  </div>
+
+  <script>
+document.addEventListener('DOMContentLoaded', () => {
+  
+  const authOverlay = document.getElementById('auth-overlay');
+  const mainContent = document.getElementById('main-content');
+  const authBtn = document.getElementById('auth-btn');
+  const toggleAuthLink = document.getElementById('toggle-auth');
+  const authTitle = document.getElementById('auth-title');
+  const authSubtitle = document.getElementById('auth-subtitle');
+  
+  // cadastro
+  const nameInput = document.getElementById('auth-name');
+  const addressInput = document.getElementById('auth-address');
+  const emailInput = document.getElementById('auth-email');
+  const passwordInput = document.getElementById('auth-password');
+  const errorDisplay = document.getElementById('auth-error-msg');
+
+  const registerFields = document.querySelectorAll('.register-only');
+
+  let isLoginMode = true;
+
+  //verifica erro
+  if (!localStorage.getItem('usersDB')) {
+    localStorage.setItem('usersDB', JSON.stringify([]));
+  }
+
+  function showFeedbackMessage(message, type = 'error') {
+    errorDisplay.innerText = message;
+    errorDisplay.style.display = 'block';
+    
+    if (type === 'success') {
+      errorDisplay.style.background = 'rgba(34, 137, 95, 0.1)';
+      errorDisplay.style.borderColor = 'rgba(34, 137, 95, 0.3)';
+      errorDisplay.style.color = '#5FF3B9';
+    } else {
+      errorDisplay.style.background = 'rgba(232, 74, 59, 0.1)';
+      errorDisplay.style.borderColor = 'rgba(232, 74, 59, 0.2)';
+      errorDisplay.style.color = '#FF6B5B';
+    }
+  }
+
+  function clearFeedback() {
+    errorDisplay.style.display = 'none';
+    nameInput.classList.remove('input-error');
+    addressInput.classList.remove('input-error');
+    emailInput.classList.remove('input-error');
+    passwordInput.classList.remove('input-error');
+  }
+
+  [nameInput, addressInput, emailInput, passwordInput].forEach(input => {
+    if(input) input.addEventListener('input', clearFeedback);
+  });
+
+  // botao login/cadastro
+  if (toggleAuthLink) {
+    toggleAuthLink.addEventListener('click', (e) => {
+      e.preventDefault();
+      isLoginMode = !isLoginMode;
+      clearFeedback();
+
+      if (isLoginMode) {
+        authTitle.innerText = 'Entrar na Plataforma';
+        authSubtitle.innerText = 'Acesse para interagir e filtrar o conteúdo comercial.';
+        authBtn.innerText = 'Acessar Conta';
+        toggleAuthLink.innerHTML = 'Não possui cadastro? <span>Cadastre-se aqui</span>';
+        registerFields.forEach(f => f.style.display = 'none');
+      } else {
+        authTitle.innerText = 'Criar Nova Conta';
+        authSubtitle.innerText = 'Insira seus dados hiperlocais para liberar os filtros do portal.';
+        authBtn.innerText = 'Confirmar Meu Cadastro';
+        toggleAuthLink.innerHTML = 'Já é cadastrado? <span>Acesse aqui</span>';
+        registerFields.forEach(f => f.style.display = 'block');
+      }
+    });
+  }
+
+  //validacao e gps//   
+    function processAuthentication() {
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    //email
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!email || !emailPattern.test(email)) {
+      emailInput.classList.add('input-error');
+      showFeedbackMessage('Por favor, digite um formato de e-mail válido (Ex: nome@provedor.com).');
+      return;
+    }
+
+    //senha
+    if (password.length < 6 || password.length > 20) {
+      passwordInput.classList.add('input-error');
+      showFeedbackMessage('A senha digitada incorretamente. Ela precisa conter entre 6 e 20 caracteres.');
+      return;
+    }
+
+    let registeredUsers = JSON.parse(localStorage.getItem('usersDB'));
+
+    if (!isLoginMode) {
+      //cadastro
+      const name = nameInput.value.trim();
+      const address = addressInput.value.trim();
+
+      //nome
+      if (!name) {
+        nameInput.classList.add('input-error');
+        showFeedbackMessage('Aviso: O preenchimento do Nome Completo é obrigatório para o cadastro.');
+        return;
+      }
+
+      //endereco
+      if (!address) {
+        addressInput.classList.add('input-error');
+        showFeedbackMessage('Aviso: O preenchimento do seu Endereço é obrigatório.');
+        return;
+      }
+
+      const userExists = registeredUsers.some(user => user.email === email);
+      if (userExists) {
+        showFeedbackMessage('Este e-mail já possui um cadastro existente.');
+        return;
+      }
+
+      //gps
+      if (!navigator.geolocation) {
+        showFeedbackMessage('Erro técnico: Seu navegador não suporta solicitações de geolocalização.');
+        return;
+      }
+
+      showFeedbackMessage('Solicitando autorização de GPS... Por favor, permita o acesso na janela pop-up.', 'success');
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // permissao top
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+
+          //salva tudo
+          registeredUsers.push({
+            name: name,
+            address: address,
+            email: email,
+            password: password,
+            latitude: lat,
+            longitude: lon
+          });
+          
+          localStorage.setItem('usersDB', JSON.stringify(registeredUsers));
+          
+          //tela login
+          isLoginMode = true;
+          authTitle.innerText = 'Entrar na Plataforma';
+          authSubtitle.innerText = 'Cadastro validado! Entre na sua conta agora.';
+          authBtn.innerText = 'Acessar Conta';
+          toggleAuthLink.innerHTML = 'Não possui cadastro? <span>Cadastre-se aqui</span>';
+          registerFields.forEach(f => f.style.display = 'none');
+          
+          passwordInput.value = '';
+          showFeedbackMessage('Cadastro validado com localização segura! Insira sua senha para entrar.', 'success');
+        },
+        (error) => {
+          //permissao recusada
+          showFeedbackMessage('Cadastro Negado: É obrigatório conceder permissão de localização (GPS) para se registrar nesta rede hiperlocal.');
+        }
+      );
+
+    } else {
+      //loginnn
+      const emailFound = registeredUsers.some(user => user.email === email);
+      
+      if (!emailFound) {
+        emailInput.classList.add('input-error');
+        showFeedbackMessage('Aviso: Este usuário não tem cadastro. Mude para a aba "Cadastre-se aqui" abaixo para criar seu perfil.');
+        return;
+      }
+
+      const exactMatch = registeredUsers.find(user => user.email === email && user.password === password);
+      
+      if (!exactMatch) {
+        passwordInput.classList.add('input-error');
+        showFeedbackMessage('Aviso: A senha digitada não está correta. Verifique seus dados e tente novamente.');
+        return;
+      }
+
+      //transicao portal
+      authOverlay.style.opacity = '0';
+      authOverlay.style.visibility = 'hidden';
+      
+      mainContent.style.display = 'block';
+      setTimeout(() => {
+        mainContent.style.opacity = '1';
+        window.scrollTo(0, 0);
+      }, 50);
+    }
+  }
+
+  if (authBtn) {
+    authBtn.addEventListener('click', processAuthentication);
+  }
+
+  //hamburguer
+  const hamburger = document.getElementById('hamburger');
+  const navLinks = document.getElementById('nav-links');
+  if (hamburger && navLinks) {
+    hamburger.addEventListener('click', () => {
+      hamburger.classList.toggle('open');
+      navLinks.classList.toggle('open');
+    });
+    navLinks.querySelectorAll('a, button').forEach(item => {
+      item.addEventListener('click', () => {
+        hamburger.classList.remove('open');
+        navLinks.classList.remove('open');
+      });
+    });
+  }
+
+  //filtros
+  const filterChips = document.querySelectorAll('.filter-chip');
+  const feedCards = document.querySelectorAll('.feed-card');
+
+  filterChips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      filterChips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+
+      const filterValue = chip.getAttribute('data-filter');
+
+      feedCards.forEach(card => {
+        const cardCategory = card.getAttribute('data-category');
+        if (filterValue === 'all' || filterValue === cardCategory) {
+          card.style.display = 'block';
+        } else {
+          card.style.display = 'none';
+        }
+      });
+    });
+  });
+});
+  </script>
+
+</body>
+</html>
