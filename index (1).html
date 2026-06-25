@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tudo ao Seu Redor — Informação Hiperlocal</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --noite:    #0D1B2A;
+      --noite2:   #111E2E;
+      --teal:     #5FF3B9;
+      --amarelo:  #F5C842;
+      --amarelodk:#D4A820;
+      --branco:   #FFFFFF;
+      --vermelho: #E84A3B;
+      --muted:    #7A90AA;
+      --borda:    rgba(255,255,255,0.09);
+      --cardbg:   rgba(255,255,255,0.03);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--noite);
+      color: var(--branco);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    nav {
+      position: fixed; top: 0; left: 0; width: 100%;
+      padding: 20px 6%;
+      display: flex; justify-content: space-between; align-items: center;
+      background: rgba(13,27,42,0.88);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--borda);
+      z-index: 1000;
+    }
+    .logo { font-family: 'Syne', sans-serif; font-size: 1.45rem; font-weight: 800; letter-spacing: -0.5px; }
+    .logo span { color: var(--amarelo); }
+
+    .menu { display: flex; gap: 32px; list-style: none; align-items: center; }
+    .menu a { color: var(--muted); text-decoration: none; font-size: 0.9rem; font-weight: 600; transition: color 0.2s; }
+    .menu a:hover { color: var(--branco); }
+
+    .btn-nav {
+      background: var(--amarelo); color: var(--noite);
+      padding: 10px 22px; border-radius: 9px;
+      font-weight: 700; border: none; cursor: pointer;
+      font-size: 0.88rem; font-family: 'Inter', sans-serif;
+      transition: background 0.2s;
+    }
+    .btn-nav:hover { background: var(--amarelodk); }
+
+    .hamburguer {
+      display: none; flex-direction: column; gap: 5px;
+      cursor: pointer; background: none; border: none; padding: 4px;
+    }
+    .hamburguer span { display: block; width: 24px; height: 2px; background: var(--branco); border-radius: 2px; transition: all 0.3s; }
+    .hamburguer.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .hamburguer.open span:nth-child(2) { opacity: 0; }
+    .hamburguer.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; justify-content: center;
+      padding: 120px 6% 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 70% 50%, rgba(26,107,74,0.18) 0%, transparent 70%),
+        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(245,200,66,0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.6rem, 6vw, 5.2rem);
+      font-weight: 800; line-height: 1.05;
+      letter-spacing: -2px; max-width: 820px; margin-bottom: 28px;
+    }
+    .hero h1 em { font-style: normal; color: var(--amarelo); position: relative; }
+    .hero h1 em::after {
+      content: ''; position: absolute; left: 0; bottom: -4px;
+      width: 100%; height: 3px; background: var(--amarelo); border-radius: 2px; opacity: 0.5;
+    }
+
+    /* utilidades */
+    section { padding: 100px 6%; }
+
+    .rotulo {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.25);
+      color: var(--amarelo); padding: 6px 14px; border-radius: 20px;
+      font-size: 0.78rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; margin-bottom: 28px; width: fit-content;
+    }
+    /* rotulo de secao */
+    .rotulo.secao {
+      background: transparent; border: none; padding: 0;
+      color: var(--teal); font-size: 0.75rem; letter-spacing: 0.1em;
+      display: inline-block; margin-bottom: 16px;
+    }
+
+    .titulo {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(1.8rem, 4vw, 3rem);
+      font-weight: 800; letter-spacing: -1px; margin-bottom: 16px;
+    }
+    .sub {
+      color: var(--muted); font-size: 1.05rem;
+      max-width: 560px; line-height: 1.7; margin-bottom: 56px;
+    }
+
+    /* botoes */
+    .btn-primary {
+      background: var(--amarelo); color: var(--noite);
+      padding: 16px 32px; border-radius: 12px;
+      font-weight: 700; font-size: 1rem; border: none;
+      cursor: pointer; text-decoration: none; display: inline-block;
+      transition: background 0.2s, transform 0.15s;
+    }
+    .btn-primary:hover { background: var(--amarelodk); transform: translateY(-1px); }
+
+    .btn-secondary {
+      background: transparent; color: var(--branco);
+      padding: 16px 32px; border-radius: 12px;
+      font-weight: 600; font-size: 1rem;
+      border: 1px solid var(--borda); cursor: pointer;
+      text-decoration: none; display: inline-block;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .btn-secondary:hover { border-color: rgba(255,255,255,0.3); transform: translateY(-1px); }
+
+    /* hero stats */
+    .stats { display: flex; gap: 40px; margin-top: 64px; padding-top: 40px; border-top: 1px solid var(--borda); }
+    .stat .num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--amarelo); line-height: 1; }
+    .stat .leg { font-size: 0.82rem; color: var(--muted); font-weight: 600; margin-top: 4px; text-transform: uppercase; letter-spacing: 0.06em; }
+
+    /* mockup */
+    .mockup {
+      padding: 60px 6% 100px;
+      display: flex; justify-content: center;
+    }
+    .tela {
+      background: rgba(255,255,255,0.025);
+      border: 1px solid var(--borda); border-radius: 24px;
+      padding: 28px; max-width: 900px; width: 100%;
+      position: relative; overflow: hidden;
+    }
+    .tela::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px;
+      background: linear-gradient(90deg, var(--amarelo), var(--teal));
+    }
+    .barra { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
+    .circulo { width: 10px; height: 10px; border-radius: 50%; }
+    .circulo:nth-child(1) { background: #FF5F57; }
+    .circulo:nth-child(2) { background: #FEBC2E; }
+    .circulo:nth-child(3) { background: #28C840; }
+    .urltexto {
+      flex: 1; background: rgba(255,255,255,0.06);
+      border-radius: 6px; padding: 6px 12px;
+      font-size: 0.78rem; color: var(--muted);
+    }
+    .anuncios { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+    .cartao {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--borda); border-radius: 12px; padding: 22px 20px;
+    }
+    .cartao.largo { grid-column: span 2; }
+    .cartao h4 { font-size: 0.92rem; font-weight: 700; margin-bottom: 7px; line-height: 1.35; }
+    .cartao p { font-size: 0.82rem; color: var(--muted); line-height: 1.55; }
+
+    .tag {
+      font-size: 0.74rem; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.06em; padding: 4px 10px; border-radius: 5px;
+      display: inline-block; margin-bottom: 12px;
+    }
+    .tag.alerta  { background: rgba(232,74,59,0.15);  color: #FF8477; }
+    .tag.evento  { background: rgba(95,243,185,0.12); color: var(--teal); }
+    .tag.emprego { background: rgba(59,143,217,0.15); color: #74C2FF; }
+    .tag.comercio{ background: rgba(245,200,66,0.15); color: var(--amarelo); }
+    .tag.perdido { background: rgba(245,200,66,0.1);  color: var(--amarelo); }
+
+    /* problemas */
+    .sproblema { background: var(--noite2); border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); }
+    .problema { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .lista { list-style: none; display: flex; flex-direction: column; gap: 24px; }
+    .item { display: flex; gap: 18px; align-items: flex-start; }
+    .icone {
+      width: 44px; height: 44px; border-radius: 12px; flex-shrink: 0;
+      background: rgba(232,74,59,0.12); border: 1px solid rgba(232,74,59,0.2);
+      display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+    }
+    .icone.ok { background: rgba(95,243,185,0.1); border-color: rgba(95,243,185,0.2); }
+    .item h4 { font-size: 0.95rem; font-weight: 700; margin-bottom: 4px; }
+    .item p  { font-size: 0.88rem; color: var(--muted); line-height: 1.6; }
+
+    /* como funciona */
+    .etapas {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 24px; position: relative;
+    }
+    .etapas::before {
+      content: ''; position: absolute; top: 28px; left: 10%; right: 10%;
+      height: 1px; background: var(--borda);
+    }
+    .etapa {
+      background: var(--cardbg); border: 1px solid var(--borda);
+      border-radius: 16px; padding: 28px 24px; text-align: center; position: relative;
+    }
+    .numero {
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--amarelo); color: var(--noite);
+      font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1rem;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; position: relative; z-index: 1;
+    }
+    .etapa h3 { font-size: 0.95rem; font-weight: 700; margin-bottom: 8px; }
+    .etapa p  { font-size: 0.85rem; color: var(--muted); line-height: 1.6; }
+
+    /* funcionalidades */
+    .sfunc { background: var(--noite2); border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); }
+    .funcoes { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .func {
+      background: var(--cardbg); border: 1px solid var(--borda);
+      border-radius: 18px; padding: 32px;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .func:hover { border-color: rgba(245,200,66,0.3); transform: translateY(-3px); }
+    .func.destaque { border-color: rgba(245,200,66,0.4); background: rgba(245,200,66,0.02); }
+    .emoji { font-size: 2rem; margin-bottom: 18px; }
+    .func h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 10px; }
+    .func p  { font-size: 0.88rem; color: var(--muted); line-height: 1.65; }
+    .visuais { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+    .vlinha {
+      display: flex; align-items: center; gap: 10px;
+      background: rgba(255,255,255,0.04); border: 1px solid var(--borda);
+      border-radius: 10px; padding: 10px 14px;
+    }
+    .vbolinha { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .vlinha span { font-size: 0.78rem; color: var(--muted); }
+
+    /* categorias */
+    .categorias { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; }
+    .catcard {
+      background: var(--cardbg); border: 1px solid var(--borda);
+      border-radius: 16px; padding: 28px 20px;
+      text-align: center; cursor: pointer; transition: all 0.2s;
+    }
+    .catcard:hover { transform: translateY(-4px); }
+    .catcard:nth-child(1):hover { border-color: rgba(232,74,59,0.5); }
+    .catcard:nth-child(2):hover { border-color: rgba(95,243,185,0.5); }
+    .catcard:nth-child(3):hover { border-color: rgba(59,143,217,0.5); }
+    .catcard:nth-child(4):hover { border-color: rgba(245,200,66,0.5); }
+    .catcard:nth-child(5):hover { border-color: rgba(245,200,66,0.3); }
+    .catcard .emoji { font-size: 2rem; display: block; margin-bottom: 12px; }
+    .catcard strong { display: block; font-size: 0.85rem; margin-bottom: 4px; }
+    .catcard small  { font-size: 0.75rem; color: var(--muted); }
+
+    /* nosso diferencial */
+    .sdiff { background: var(--noite2); border-top: 1px solid var(--borda); border-bottom: 1px solid var(--borda); }
+    .diff { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .tabela { width: 100%; border-collapse: collapse; }
+    .tabela th {
+      padding: 12px 16px; font-size: 0.78rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      text-align: left; color: var(--muted); border-bottom: 1px solid var(--borda);
+    }
+    .tabela th:nth-child(2) { color: var(--amarelo); }
+    .tabela td { padding: 14px 16px; font-size: 0.88rem; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    .tabela td:nth-child(1) { color: var(--muted); }
+    .tabela td:nth-child(2) { color: var(--teal); font-weight: 600; }
+    .tabela td:nth-child(3) { color: var(--muted); }
+
+    /* planos pagos */
+    .planos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; max-width: 1000px; margin: 0 auto; }
+    .plano {
+      background: var(--cardbg); border: 1px solid var(--borda);
+      border-radius: 20px; padding: 40px 32px;
+      display: flex; flex-direction: column; justify-content: space-between;
+      position: relative; transition: transform 0.2s;
+    }
+    .plano:hover { transform: translateY(-4px); }
+    .plano.em-destaque { border-color: var(--amarelo); background: rgba(245,200,66,0.02); }
+    .badge {
+      position: absolute; top: -13px; right: 24px;
+      background: var(--amarelo); color: var(--noite);
+      padding: 4px 12px; border-radius: 20px;
+      font-size: 0.72rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .plano h3 { font-family: 'Syne', sans-serif; font-size: 1.15rem; font-weight: 700; margin-bottom: 8px; }
+    .preco { font-family: 'Syne', sans-serif; font-size: 2.6rem; font-weight: 800; color: var(--amarelo); margin-bottom: 24px; line-height: 1; }
+    .preco span { font-size: 0.95rem; color: var(--muted); font-weight: 400; }
+    .plano ul { list-style: none; margin-bottom: 32px; }
+    .plano ul li { font-size: 0.9rem; color: #D1DCE9; margin-bottom: 12px; display: flex; align-items: flex-start; gap: 10px; line-height: 1.4; }
+    .plano ul li::before { content: "✓"; color: var(--amarelo); font-weight: 700; flex-shrink: 0; margin-top: 1px; }
+
+    .btn-plano { width: 100%; padding: 14px; border-radius: 10px; font-weight: 700; font-size: 0.9rem; border: none; cursor: pointer; transition: all 0.2s; font-family: 'Inter', sans-serif; }
+    .btn-plano.cheio  { background: var(--amarelo); color: var(--noite); }
+    .btn-plano.cheio:hover  { background: var(--amarelodk); }
+    .btn-plano.borda  { background: transparent; color: var(--branco); border: 1px solid var(--borda); }
+    .btn-plano.borda:hover  { border-color: rgba(255,255,255,0.3); }
+
+    /* nosso site no final */
+    .scta { text-align: center; padding: 120px 6%; position: relative; overflow: hidden; }
+    .scta::before {
+      content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(26,107,74,0.2) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .scta .titulo { font-size: clamp(2rem, 5vw, 3.8rem); max-width: 700px; margin: 0 auto 20px; }
+    .scta .sub    { margin: 0 auto 44px; text-align: center; }
+    .botoes { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* footer */
+    footer {
+      border-top: 1px solid var(--borda); padding: 36px 6%;
+      display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;
+    }
+    .flogo { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800; }
+    .flogo span { color: var(--amarelo); }
+    footer small { font-size: 0.82rem; color: var(--muted); }
+    .flinks { display: flex; gap: 20px; }
+    .flinks a { color: var(--muted); font-size: 0.82rem; text-decoration: none; transition: color 0.2s; }
+    .flinks a:hover { color: var(--branco); }
+
+    /* responsivo pra telas de tamanhos diferentes */
+    @media (max-width: 1024px) {
+      .anuncios   { grid-template-columns: 1fr 1fr; }
+      .cartao.largo { grid-column: span 2; }
+      .funcoes   { grid-template-columns: 1fr 1fr; }
+      .categorias    { grid-template-columns: repeat(3, 1fr); }
+      .etapas { grid-template-columns: 1fr 1fr; }
+      .etapas::before { display: none; }
+      .diff   { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 768px) {
+      nav { padding: 16px 5%; flex-wrap: wrap; }
+      .hamburguer { display: flex; }
+      .menu {
+        display: none; flex-direction: column; gap: 0;
+        width: 100%; background: rgba(13,27,42,0.98);
+        border-top: 1px solid var(--borda); margin-top: 12px; border-radius: 12px; overflow: hidden;
+      }
+      .menu.open { display: flex; }
+      .menu li { width: 100%; }
+      .menu a { display: block; padding: 14px 20px; border-bottom: 1px solid var(--borda); }
+      .menu li:last-child a { border-bottom: none; }
+      .btn-nav { width: 100%; padding: 14px 20px; border-radius: 0; text-align: left; background: rgba(245,200,66,0.1); color: var(--amarelo); }
+      .hero  { padding: 100px 5% 60px; }
+      .stats { flex-wrap: wrap; gap: 24px; }
+      section { padding: 70px 5%; }
+      .problema { grid-template-columns: 1fr; gap: 40px; }
+      .funcoes  { grid-template-columns: 1fr; }
+      .categorias   { grid-template-columns: 1fr 1fr; }
+      .planos{ grid-template-columns: 1fr; }
+      .etapas{ grid-template-columns: 1fr 1fr; }
+      .anuncios  { grid-template-columns: 1fr; }
+      .cartao.largo { grid-column: span 1; }
+      footer  { flex-direction: column; text-align: center; }
+      .flinks { justify-content: center; }
+    }
+    @media (max-width: 480px) {
+      .categorias    { grid-template-columns: 1fr 1fr; }
+      .etapas { grid-template-columns: 1fr; }
+    }
+
+    .fadein { opacity: 0; transform: translateY(28px); transition: opacity 0.55s ease, transform 0.55s ease; }
+    .fadein.visivel { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+  <!-- nav -->
+  <nav>
+    <div class="logo">tudo<span>aoseuredor</span></div>
+    <button class="hamburguer" id="hamburguer" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+    <ul class="menu" id="menu">
+      <li><a href="#como-funciona">Como funciona</a></li>
+      <li><a href="#funcionalidades">Funcionalidades</a></li>
+      <li><a href="#planos">Planos</a></li>
+      <li><a href="#planos"><button class="btn-nav">Anunciar agora</button></a></li>
+    </ul>
+  </nav>
+
+  <!-- hero -->
+  <section class="hero" id="inicio">
+    <div class="rotulo">📍 Rede Hiperlocal</div>
+    <h1>A cidade inteira <br/>em um só <em>feed</em></h1>
+    <p class="sub" style="margin-bottom:44px;">
+      Eventos, vagas de emprego, alertas e promoções do seu bairro, centralizados, filtráveis e atualizados em tempo real. Sem ruído de grupos de WhatsApp.
+    </p>
+    <div style="display:flex; gap:14px; flex-wrap:wrap;">
+      <a href="#como-funciona" class="btn-primary">Como funciona</a>
+      <a href="#planos" class="btn-secondary">Ver planos de anúncio</a>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="num">5+</div><div class="leg">Categorias de conteúdo</div></div>
+      <div class="stat"><div class="num">GPS</div><div class="leg">Filtro por localização</div></div>
+      <div class="stat"><div class="num">Real‑time</div><div class="leg">Informação atualizada</div></div>
+      <div class="stat"><div class="num">R$ 19</div><div class="leg">Para começar a anunciar</div></div>
+    </div>
+  </section>
+
+  <!-- mockup -->
+  <div class="mockup">
+    <div class="tela fadein">
+      <div class="barra">
+        <div class="circulo"></div>
+        <div class="circulo"></div>
+        <div class="circulo"></div>
+        <div class="urltexto">tudoaoseuredor.app</div>
+      </div>
+      <div class="anuncios">
+        <div class="cartao largo">
+          <span class="tag comercio">⭐ Anúncio destaque</span>
+          <h4>Farmácia Vida &amp; Saúde — 20% off em vitaminas</h4>
+          <p>Promoção válida esta semana para todos os clientes. Atendimento de segunda a sábado.</p>
+        </div>
+        <div class="cartao">
+          <span class="tag alerta">🚨 Alerta</span>
+          <h4>Bloqueio na Rua das Flores por obras</h4>
+          <p>Desvio recomendado pela Av. Principal até sexta-feira.</p>
+        </div>
+        <div class="cartao">
+          <span class="tag evento">🎉 Evento</span>
+          <h4>Feira de Artesanato no Parque Central</h4>
+          <p>Domingo, 9h às 17h. Entrada gratuita para todos.</p>
+        </div>
+        <div class="cartao">
+          <span class="tag emprego">💼 Vaga de Emprego</span>
+          <h4>Padaria do Bairro contrata atendente</h4>
+          <p>Período integral. Envie currículo pelo app.</p>
+        </div>
+        <div class="cartao">
+          <span class="tag perdido">🐾 Animal Perdido</span>
+          <h4>Cachorro Golden encontrado no bairro</h4>
+          <p>Está sendo cuidado. Entre em contato pelo anúncio.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- problema -->
+  <section class="sproblema" id="problema">
+    <div class="problema">
+      <div class="fadein">
+        <span class="rotulo secao">O problema</span>
+        <h2 class="titulo">Informação local está por todo lugar, e nenhuma está onde você precisa</h2>
+        <p class="sub">
+          Grupos de WhatsApp fragmentados, publicações informais em redes sociais e conversas de corredor. O resultado é desinformação, oportunidades perdidas e comércio local invisível.
+        </p>
+      </div>
+      <div class="fadein">
+        <ul class="lista">
+          <li class="item">
+            <div class="icone">💬</div>
+            <div>
+              <h4>Grupos de WhatsApp sem controle</h4>
+              <p>Seu número fica exposto, não há filtros, e o administrador precisa moderar tudo manualmente.</p>
+            </div>
+          </li>
+          <li class="item">
+            <div class="icone">📋</div>
+            <div>
+              <h4>Quiosques físicos desatualizados</h4>
+              <p>Alcance geográfico limitado, custo alto de impressão e invisíveis para quem não passa pelo local.</p>
+            </div>
+          </li>
+          <li class="item">
+            <div class="icone">📱</div>
+            <div>
+              <h4>Redes sociais sem foco local</h4>
+              <p>Algoritmos genéricos que escondem conteúdo da sua cidade entre anúncios nacionais e posts virais.</p>
+            </div>
+          </li>
+          <li class="item">
+            <div class="icone ok">✅</div>
+            <div>
+              <h4>Tudo ao Seu Redor resolve isso</h4>
+              <p>Uma plataforma única, organizada por categoria, com geolocalização e privacidade preservada.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- como funciona -->
+  <section id="como-funciona">
+    <div style="text-align:center; margin-bottom:56px;" class="fadein">
+      <span class="rotulo secao">Como funciona</span>
+      <h2 class="titulo">Simples em 4 etapas</h2>
+      <p class="sub" style="margin:0 auto;">Da criação da conta até acompanhar o que acontece no seu bairro, tudo em minutos.</p>
+    </div>
+    <div class="etapas">
+      <div class="etapa fadein">
+        <div class="numero">1</div>
+        <h3>Crie sua conta</h3>
+        <p>Cadastro com nome, endereço e e-mail. A localização GPS é confirmada para filtrar conteúdo hiperlocal.</p>
+      </div>
+      <div class="etapa fadein">
+        <div class="numero">2</div>
+        <h3>Acesse o feed</h3>
+        <p>Após o login, você entra no painel com tudo que está acontecendo na sua cidade e bairro agora.</p>
+      </div>
+      <div class="etapa fadein">
+        <div class="numero">3</div>
+        <h3>Filtre o que importa</h3>
+        <p>Escolha ver apenas alertas, eventos, vagas, comércio ou achados e perdidos com um clique nos chips.</p>
+      </div>
+      <div class="etapa fadein">
+        <div class="numero">4</div>
+        <h3>Anuncie seu negócio</h3>
+        <p>Empresas e prestadores escolhem um plano e aparecem em destaque no feed da sua região-alvo.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- funcionalidades -->
+  <section class="sfunc" id="funcionalidades">
+    <div class="fadein" style="margin-bottom:56px;">
+      <span class="rotulo secao">Funcionalidades</span>
+      <h2 class="titulo">Construído para o hiperlocal</h2>
+      <p class="sub">Cada detalhe foi pensado para conectar moradores e negócios locais de forma segura e eficiente.</p>
+    </div>
+    <div class="funcoes">
+      <div class="func destaque fadein">
+        <div class="emoji">📍</div>
+        <h3>Geolocalização no cadastro</h3>
+        <p>No cadastro, o app valida sua localização via GPS, garantindo que você veja apenas conteúdo da sua cidade, com privacidade total.</p>
+        <div class="visuais">
+          <div class="vlinha"><div class="vbolinha" style="background:var(--teal);"></div><span>✓ GPS validado ao cadastrar</span></div>
+          <div class="vlinha"><div class="vbolinha" style="background:var(--teal);"></div><span>✓ Número nunca exposto</span></div>
+          <div class="vlinha"><div class="vbolinha" style="background:var(--amarelo);"></div><span>★ Diferencial vs. WhatsApp</span></div>
+        </div>
+      </div>
+      <div class="func fadein">
+        <div class="emoji">🗂️</div>
+        <h3>Feed com filtros por categoria</h3>
+        <p>Chips interativos permitem ver apenas o tipo de conteúdo que você quer: alertas, eventos, vagas, comércio ou achados e perdidos.</p>
+      </div>
+      <div class="func fadein">
+        <div class="emoji">⚡</div>
+        <h3>Atualização em tempo real</h3>
+        <p>Alertas de trânsito, riscos climáticos e novidades do bairro aparecem no momento em que são publicados.</p>
+      </div>
+      <div class="func fadein">
+        <div class="emoji">🏪</div>
+        <h3>Planos para anunciantes</h3>
+        <p>Negócios locais têm opções a partir de R$19 para aparecer em destaque no feed da própria região.</p>
+      </div>
+      <div class="func fadein">
+        <div class="emoji">🔐</div>
+        <h3>Login seguro com validação</h3>
+        <p>Sistema de autenticação com validação de e-mail, senha e localização. Sem exposição de dados pessoais.</p>
+      </div>
+      <div class="func fadein">
+        <div class="emoji">📱</div>
+        <h3>Totalmente responsivo</h3>
+        <p>Interface adaptada para celular, tablet e desktop. Acesse de qualquer dispositivo, a qualquer hora.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- categorias -->
+  <section id="categorias">
+    <div style="text-align:center; margin-bottom:56px;" class="fadein">
+      <span class="rotulo secao">Categorias</span>
+      <h2 class="titulo">O que você encontra na plataforma</h2>
+      <p class="sub" style="margin:0 auto;">Cinco tipos de conteúdo organizados para você achar o que precisa sem navegar pelo caos.</p>
+    </div>
+    <div class="categorias">
+      <div class="catcard fadein">
+        <span class="emoji">🚨</span>
+        <strong>Alertas Críticos</strong>
+        <small>Trânsito, clima, obras e manutenções urgentes</small>
+      </div>
+      <div class="catcard fadein">
+        <span class="emoji">🎉</span>
+        <strong>Eventos Culturais</strong>
+        <small>Shows, feiras, cinema e lazer na cidade</small>
+      </div>
+      <div class="catcard fadein">
+        <span class="emoji">💼</span>
+        <strong>Vagas de Emprego</strong>
+        <small>Oportunidades em negócios da sua região</small>
+      </div>
+      <div class="catcard fadein">
+        <span class="emoji">🛍️</span>
+        <strong>Promoções e Comércio</strong>
+        <small>Descontos e lançamentos de lojas locais</small>
+      </div>
+      <div class="catcard fadein">
+        <span class="emoji">🐾</span>
+        <strong>Achados e Perdidos</strong>
+        <small>Pets, objetos e itens encontrados no bairro</small>
+      </div>
+    </div>
+  </section>
+
+  <!-- nosso diferencial -->
+  <section class="sdiff" id="diferencial">
+    <div class="diff">
+      <div class="fadein">
+        <span class="rotulo secao">Comparativo</span>
+        <h2 class="titulo">Por que não usar o WhatsApp?</h2>
+        <p class="sub">
+          Grupos de WhatsApp e quiosques físicos já existem, mas nenhum foi construído para organizar informação local de verdade.
+        </p>
+        <a href="#planos" class="btn-primary" style="margin-top:8px;">Ver planos de anúncio</a>
+      </div>
+      <div class="fadein">
+        <table class="tabela">
+          <thead>
+            <tr>
+              <th>Critério</th>
+              <th>Tudo ao Seu Redor</th>
+              <th>WhatsApp / Quiosque</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr><td>Privacidade do usuário</td><td>✓ Número oculto</td><td>✗ Número exposto</td></tr>
+            <tr><td>Filtro por categoria</td><td>✓ Chips interativos</td><td>✗ Não existe</td></tr>
+            <tr><td>Geolocalização real</td><td>✓ GPS validado</td><td>✗ Manual ou inexistente</td></tr>
+            <tr><td>Organização do conteúdo</td><td>✓ Por categoria</td><td>✗ Fluxo caótico</td></tr>
+            <tr><td>Custo para anunciante</td><td>✓ A partir de R$19</td><td>— Varia muito</td></tr>
+            <tr><td>Atualização em tempo real</td><td>✓ Sim</td><td>✗ Depende de moderador</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- planos pagos -->
+  <section id="planos">
+    <div style="text-align:center; margin-bottom:56px;" class="fadein">
+      <span class="rotulo secao">Planos comerciais</span>
+      <h2 class="titulo">Apareça onde seu cliente está</h2>
+      <p class="sub" style="margin:0 auto;">Anuncie eventos, promoções, vagas ou serviços diretamente no feed da sua região. Sem algoritmo genérico.</p>
+    </div>
+    <div class="planos">
+      <div class="plano fadein">
+        <div>
+          <h3>Avulso</h3>
+          <div class="preco">R$ 19<span> / post</span></div>
+          <ul>
+            <li>1 postagem comercial na timeline</li>
+            <li>Destaque ativo por 48 horas</li>
+            <li>Suporte padrão via painel</li>
+          </ul>
+        </div>
+        <button class="btn-plano borda">Começar com avulso</button>
+      </div>
+      <div class="plano em-destaque fadein">
+        <div class="badge">Mais vantajoso</div>
+        <div>
+          <h3>Destaque Mensal</h3>
+          <div class="preco">R$ 99<span> / mês</span></div>
+          <ul>
+            <li>Até 8 postagens por mês com logo</li>
+            <li>Posição prioritária nos filtros</li>
+            <li>Relatório mensal de cliques</li>
+            <li>Suporte imediato via chat</li>
+          </ul>
+        </div>
+        <button class="btn-plano cheio">Adquirir destaque</button>
+      </div>
+      <div class="plano fadein">
+        <div>
+          <h3>Corporativo</h3>
+          <div class="preco">R$ 249<span> / mês</span></div>
+          <ul>
+            <li>Postagens ilimitadas por mês</li>
+            <li>Segmentação total por bairros</li>
+            <li>API e métricas completas</li>
+            <li>Gerente de conta dedicado</li>
+          </ul>
+        </div>
+        <button class="btn-plano borda">Contatar vendas</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- nosso site no final -->
+  <section class="scta" id="acessar">
+    <div class="fadein">
+      <span class="rotulo secao">Comece agora</span>
+      <h2 class="titulo">Sua cidade tem muito a dizer. Ouça com clareza</h2>
+      <p class="sub">Cadastre-se, confirme sua localização e tenha acesso ao feed completo da sua região.</p>
+      <div class="botoes">
+        <a href="tudo_ao_seu_redor.html" class="btn-primary">Abrir o app</a>
+        <a href="#como-funciona" class="btn-secondary">Entender melhor</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- footer -->
+  <footer>
+    <div class="flogo">tudo<span>aoseuredor</span></div>
+    <small>© 2026 Tudo ao Seu Redor · UniCesumar</small>
+    <div class="flinks">
+      <a href="#inicio">Início</a>
+      <a href="#como-funciona">Como funciona</a>
+      <a href="#planos">Planos</a>
+    </div>
+  </footer>
+
+  <script>
+    const hamburguer = document.getElementById('hamburguer');
+    const menu = document.getElementById('menu');
+    if (hamburguer && menu) {
+      hamburguer.addEventListener('click', () => {
+        hamburguer.classList.toggle('open');
+        menu.classList.toggle('open');
+      });
+      menu.querySelectorAll('a, button').forEach(el => {
+        el.addEventListener('click', () => {
+          hamburguer.classList.remove('open');
+          menu.classList.remove('open');
+        });
+      });
+    }
+
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => { if (e.isIntersecting) e.target.classList.add('visivel'); });
+    }, { threshold: 0.1 });
+    document.querySelectorAll('.fadein').forEach(el => obs.observe(el));
+
+    const sections = document.querySelectorAll('section[id]');
+    window.addEventListener('scroll', () => {
+      let cur = '';
+      sections.forEach(s => { if (window.scrollY >= s.offsetTop - 100) cur = s.id; });
+      document.querySelectorAll('.menu a').forEach(a => {
+        a.style.color = a.getAttribute('href') === '#' + cur ? 'var(--branco)' : '';
+      });
+    });
+  </script>
+
+</body>
+</html>
